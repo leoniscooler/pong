@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Pong Game</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #222;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background: #000;
+            display: block;
+            border: 2px solid white;
+        }
+        #score {
+            position: absolute;
+            top: 20px;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="score">Player 1: 0 | Player 2: 0</div>
+<canvas id="pongCanvas" width="800" height="400"></canvas>
+
+<script>
+const canvas = document.getElementById('pongCanvas');
+const ctx = canvas.getContext('2d');
+
+// Game variables
+const paddleWidth = 10, paddleHeight = 80, ballSize = 12;
+let paddleSpeed = 6, ballSpeed = 4;
+let player1Score = 0, player2Score = 0;
+
+// Paddles and Ball
+let player1 = { x: 20, y: canvas.height / 2 - paddleHeight / 2 };
+let player2 = { x: canvas.width - 30, y: canvas.height / 2 - paddleHeight / 2 };
+let ball = { x: canvas.width / 2, y: canvas.height / 2, dx: ballSpeed, dy: ballSpeed };
+
+// Controls
+let keys = {};
+
+// Event listeners
+window.addEventListener('keydown', (e) => keys[e.key] = true);
+window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+function drawRect(x, y, width, height, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, width, height);
+}
+
+function drawBall() {
+    ctx.fillStyle = "#FFD700";
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ballSize / 2, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function movePaddles() {
+    if (keys['ArrowUp'] && player2.y > 0) {
+        player2.y -= paddleSpeed;
+    }
+    if (keys['ArrowDown'] && player2.y < canvas.height - paddleHeight) {
+        player2.y += paddleSpeed;
+    }
+    if (keys['w'] && player1.y > 0) {
+        player1.y -= paddleSpeed;
+    }
+    if (keys['s'] && player1.y < canvas.height - paddleHeight) {
+        player1.y += paddleSpeed;
+    }
+}
+
+function resetBall() {
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height / 2;
+    ball.dx = ballSpeed * (Math.random() > 0.5 ? 1 : -1);
+    ball.dy = ballSpeed * (Math.random() > 0.5 ? 1 : -1);
+}
+
+function updateBall() {
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+
+    // Ball collision with top and bottom walls
+    if (ball.y - ballSize / 2 < 0 || ball.y + ballSize / 2 > canvas.height) {
+        ball.dy *= -1;
+    }
+
+    // Ball collision with paddles
+    if (
+        (ball.x - ballSize / 2 < player1.x + paddleWidth &&
+         ball.y > player1.y && ball.y < player1.y + paddleHeight) ||
+        (ball.x + ballSize / 2 > player2.x &&
+         ball.y > player2.y && ball.y < player2.y + paddleHeight)
+    ) {
+        ball.dx *= -1;
+    }
+
+    // Scoring
+    if (ball.x < 0) {
+        player2Score++;
+        resetBall();
+    }
+    if (ball.x > canvas.width) {
+        player1Score++;
+        resetBall();
+    }
+
+    document.getElementById('score').innerText = `Player 1: ${player1Score} | Player 2: ${player2Score}`;
+}
+
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw paddles, ball, and center line
+    drawRect(player1.x, player1.y, paddleWidth, paddleHeight, '#42f554');
+    drawRect(player2.x, player2.y, paddleWidth, paddleHeight, '#f54242');
+    drawBall();
+    
+    // Move and update
+    movePaddles();
+    updateBall();
+
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
